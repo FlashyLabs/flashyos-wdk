@@ -1,0 +1,29 @@
+{
+  "name": "@flashyos/wallet-wdk",
+  "version": "0.1.0",
+  "description": "Governed economic agency for FlashyOS agents on Tether WDK: the AAO WalletCapability, a FlashyOS authorizer client, an MCP elicitation handler, and a WDK policy rule that defers to the authorization plane.",
+  "keywords": ["flashyos", "wdk", "tether", "wallet", "agents", "authorization"],
+  "license": "Apache-2.0",
+  "author": "Flashy Labs",
+  "homepage": "https://flashyos.com",
+  "repository": { "type": "git", "url": "https://github.com/FlashyLabs/flashyos", "directory": "packages/wallet-wdk" },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.mjs", "require": "./dist/index.js" }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^2.0.0"
+  },
+  "engines": { "node": ">=18" }
+}

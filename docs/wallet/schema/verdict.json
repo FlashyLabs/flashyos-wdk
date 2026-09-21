@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://flashyos.com/schema/wallet/verdict.json",
+  "title": "Verdict",
+  "description": "The response to a proposal. Every verdict, including DENY, is captured into the org memory.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "verdict",
+        "authorization",
+        "decisionId"
+      ],
+      "properties": {
+        "verdict": {
+          "const": "ALLOW"
+        },
+        "authorization": {
+          "$ref": "https://flashyos.com/schema/wallet/spend-authorization.json"
+        },
+        "decisionId": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "verdict",
+        "decisionId",
+        "reservationId",
+        "impact"
+      ],
+      "properties": {
+        "verdict": {
+          "const": "ESCALATE"
+        },
+        "decisionId": {
+          "type": "string"
+        },
+        "reservationId": {
+          "type": "string"
+        },
+        "impact": {
+          "enum": [
+            "MEDIUM",
+            "HIGH",
+            "CRITICAL"
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "verdict",
+        "code",
+        "reason"
+      ],
+      "properties": {
+        "verdict": {
+          "const": "DENY"
+        },
+        "code": {
+          "enum": [
+            "SCOPE_MISSING",
+            "NO_ENVELOPE",
+            "ENVELOPE_INACTIVE",
+            "KIND_NOT_PERMITTED",
+            "ASSET_NOT_PERMITTED",
+            "DESTINATION_NOT_PERMITTED",
+            "PER_TX_CAP",
+            "DAILY_CAP",
+            "INVALID_AMOUNT",
+            "INVALID_RECORD"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    }
+  ]
+}

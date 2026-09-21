@@ -1,0 +1,3105 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "FlashyOS wallet authorization plane",
+    "version": "0.1.0",
+    "description": "The deterministic layer between an agent's proposal and a signer that holds the keys. Every verdict, including refusals, is captured into the org's memory. Schemas referenced here are the enforced validators, published under docs/wallet/schema/."
+  },
+  "components": {
+    "securitySchemes": {
+      "session": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "A member session token."
+      },
+      "agentToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "An agent token; the required scope is named per operation."
+      }
+    },
+    "schemas": {
+      "OperationRecord": {
+        "$ref": "https://flashyos.com/schema/wallet/operation-record.json"
+      },
+      "SpendEnvelopeInput": {
+        "$ref": "https://flashyos.com/schema/wallet/spend-envelope-input.json"
+      },
+      "SpendAuthorization": {
+        "$ref": "https://flashyos.com/schema/wallet/spend-authorization.json"
+      },
+      "Verdict": {
+        "$ref": "https://flashyos.com/schema/wallet/verdict.json"
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          }
+        }
+      },
+      "SignedInvoice": {
+        "$ref": "https://flashyos.com/schema/wallet/signed-invoice.json",
+        "description": "Published under docs/wallet/schema/signed-invoice.json."
+      },
+      "SignedReceipt": {
+        "$ref": "https://flashyos.com/schema/wallet/signed-receipt.json",
+        "description": "Published under docs/wallet/schema/signed-receipt.json."
+      },
+      "AgentChainIdentity": {
+        "type": "object",
+        "required": [
+          "agentName",
+          "family",
+          "accountIndex",
+          "address",
+          "createdAt"
+        ],
+        "properties": {
+          "agentName": {
+            "type": "string"
+          },
+          "family": {
+            "enum": [
+              "evm",
+              "tron"
+            ]
+          },
+          "accountIndex": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "The derived account the agent acts from. Index 0 is the treasury."
+          },
+          "address": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Reported by the signer once derived."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Meter": {
+        "type": "object",
+        "description": "Phase 19. A cap for one provider under one decision; ticks against it; one settlement at close.",
+        "required": [
+          "id",
+          "agentName",
+          "chain",
+          "asset",
+          "provider",
+          "unit",
+          "cap",
+          "used",
+          "units",
+          "toleranceBps",
+          "status",
+          "decisionId"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "agentName": {
+            "type": "string"
+          },
+          "chain": {
+            "type": "string"
+          },
+          "asset": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "providerName": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "cap": {
+            "type": "string"
+          },
+          "used": {
+            "type": "string"
+          },
+          "units": {
+            "type": "string"
+          },
+          "toleranceBps": {
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "PENDING",
+              "OPEN",
+              "CLOSED",
+              "REFUSED",
+              "REJECTED"
+            ]
+          },
+          "decisionId": {
+            "type": "string"
+          },
+          "authorizationId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "txHash": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "providerUnits": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "providerAmount": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "difference": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "refusalCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "openedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "closedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "ticks": {
+            "type": "integer"
+          }
+        }
+      },
+      "ExternalSettlement": {
+        "type": "object",
+        "description": "Phase 18. A SignedInvoice this org paid, refused, or is deciding on, with the plane-signed receipt once settled.",
+        "required": [
+          "id",
+          "payerAgentName",
+          "payeeName",
+          "invoiceId",
+          "invoice",
+          "chain",
+          "asset",
+          "amount",
+          "destination",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "payerAgentName": {
+            "type": "string"
+          },
+          "payeeName": {
+            "type": "string"
+          },
+          "payeePublicKey": {
+            "type": "string"
+          },
+          "invoiceId": {
+            "type": "string"
+          },
+          "invoice": {
+            "$ref": "#/components/schemas/SignedInvoice"
+          },
+          "chain": {
+            "type": "string"
+          },
+          "asset": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "string"
+          },
+          "destination": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "AUTHORIZED",
+              "ESCALATED",
+              "REFUSED",
+              "SETTLED",
+              "REVERTED"
+            ]
+          },
+          "refusalCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "decisionId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "authorizationId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "txHash": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "settledAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "receipt": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SignedReceipt"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SafeAllowancePlan": {
+        "type": "object",
+        "description": "Phase 17. The envelope tree as Safe Allowance Module transactions for a person to execute. Nothing here signs.",
+        "required": [
+          "plan",
+          "missingAddress",
+          "agents"
+        ],
+        "properties": {
+          "plan": {
+            "type": "object",
+            "required": [
+              "version",
+              "safeAddress",
+              "moduleAddress",
+              "token",
+              "transactions"
+            ],
+            "properties": {
+              "version": {
+                "const": 1
+              },
+              "safeAddress": {
+                "type": "string"
+              },
+              "moduleAddress": {
+                "type": "string"
+              },
+              "token": {
+                "type": "string"
+              },
+              "transactions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "op",
+                    "agentName",
+                    "to",
+                    "value",
+                    "data",
+                    "summary"
+                  ],
+                  "properties": {
+                    "op": {
+                      "enum": [
+                        "addDelegate",
+                        "setAllowance",
+                        "removeDelegate",
+                        "deleteAllowance"
+                      ]
+                    },
+                    "agentName": {
+                      "type": "string"
+                    },
+                    "to": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "const": "0"
+                    },
+                    "data": {
+                      "type": "string"
+                    },
+                    "summary": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "missingAddress": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "agents": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "agentName": {
+                  "type": "string"
+                },
+                "address": {
+                  "type": "string"
+                },
+                "dailyMax": {
+                  "type": "string"
+                },
+                "envelopeId": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ProvenanceEntry": {
+        "type": "object",
+        "description": "Phase 20. One wallet fact in the hash-chained export. hash = sha256(canonical(seq, at, kind, id, data, prev)); prev is the previous entry's hash, 64 zeros first.",
+        "required": [
+          "seq",
+          "at",
+          "kind",
+          "id",
+          "data",
+          "prev",
+          "hash"
+        ],
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "kind": {
+            "enum": [
+              "decision",
+              "capture",
+              "authorization",
+              "settlement",
+              "settlement-in",
+              "external-settlement",
+              "meter"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          },
+          "prev": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      },
+      "Seal": {
+        "type": "object",
+        "description": "Phase 20. A Merkle root over the export (leaves `<kind>:<id>` → entry hash, the brain's construction), signed by the plane's authorization key over canonical(version, org, seq, entries, through, root).",
+        "required": [
+          "version",
+          "org",
+          "seq",
+          "entries",
+          "through",
+          "root",
+          "sig",
+          "id",
+          "createdAt",
+          "anchorCalldata"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "org": {
+            "type": "string",
+            "description": "The org slug."
+          },
+          "seq": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "entries": {
+            "type": "integer"
+          },
+          "through": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "root": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "sig": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "anchorCalldata": {
+            "type": "string",
+            "pattern": "^0x[0-9a-f]{64}$",
+            "description": "The 32 bytes a person may anchor on a chain."
+          }
+        }
+      },
+      "TrustedPlane": {
+        "type": "object",
+        "description": "Phase 23. A plane whose receipts this org accepts. kid = sha256 of the SPKI DER.",
+        "required": [
+          "id",
+          "name",
+          "kid",
+          "publicKey",
+          "active",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "kid": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "publicKey": {
+            "type": "string"
+          },
+          "url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdBy": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "revokedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "OrgSigningKey": {
+        "type": "object",
+        "description": "Phase 24. The org's own Ed25519 key, public half. Outbound invoices are signed under the active one; retired ones still verify.",
+        "required": [
+          "id",
+          "kid",
+          "publicKey",
+          "active",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kid": {
+            "type": "string"
+          },
+          "publicKey": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "retiredAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "OutboundInvoice": {
+        "type": "object",
+        "description": "Phase 24. A SignedInvoice this org issued, with the plane-signed receipt that paid it once accepted.",
+        "required": [
+          "id",
+          "invoiceId",
+          "invoice",
+          "invoiceHash",
+          "kid",
+          "chain",
+          "asset",
+          "amount",
+          "destination",
+          "status",
+          "expiresAt",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "invoiceId": {
+            "type": "string"
+          },
+          "invoice": {
+            "$ref": "#/components/schemas/SignedInvoice"
+          },
+          "invoiceHash": {
+            "type": "string"
+          },
+          "kid": {
+            "type": "string"
+          },
+          "chain": {
+            "type": "string"
+          },
+          "asset": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "string"
+          },
+          "destination": {
+            "type": "string"
+          },
+          "memo": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ISSUED",
+              "PAID",
+              "VOID"
+            ]
+          },
+          "issuedBy": {
+            "type": "string"
+          },
+          "receipt": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SignedReceipt"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "receiptKid": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "txHash": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "paidAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "InboundPayment": {
+        "type": "object",
+        "description": "Phase 25. Money that arrived at a receiving address by x402, one per EIP-3009 nonce.",
+        "required": [
+          "id",
+          "kind",
+          "chain",
+          "asset",
+          "amount",
+          "from",
+          "to",
+          "nonce",
+          "txHash",
+          "outcome",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "const": "x402"
+          },
+          "chain": {
+            "type": "string"
+          },
+          "asset": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "nonce": {
+            "type": "string"
+          },
+          "resource": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "txHash": {
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "CONFIRMED",
+              "REVERTED"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "X402Challenge": {
+        "type": "object",
+        "description": "An x402 v1 402 body. Only scheme \"exact\" on a listed testnet is ever produced or accepted.",
+        "required": [
+          "x402Version",
+          "accepts"
+        ],
+        "properties": {
+          "x402Version": {
+            "const": 1
+          },
+          "error": {
+            "type": "string"
+          },
+          "accepts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "scheme",
+                "network",
+                "maxAmountRequired",
+                "payTo",
+                "asset"
+              ],
+              "properties": {
+                "scheme": {
+                  "const": "exact"
+                },
+                "network": {
+                  "type": "string"
+                },
+                "maxAmountRequired": {
+                  "type": "string"
+                },
+                "resource": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "mimeType": {
+                  "type": "string"
+                },
+                "payTo": {
+                  "type": "string"
+                },
+                "maxTimeoutSeconds": {
+                  "type": "integer"
+                },
+                "asset": {
+                  "type": "string"
+                },
+                "extra": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/v1/orgs/{orgId}/wallet/envelopes": {
+      "get": {
+        "summary": "List active envelopes",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "envelopes"
+          },
+          "403": {
+            "description": "not a member"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create or supersede an agent's envelope (OWNER/ADMIN)",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/SpendEnvelopeInput"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "agentName"
+                    ],
+                    "properties": {
+                      "agentName": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "envelope"
+          },
+          "400": {
+            "description": "ENVELOPE_INVALID · ENVELOPE_INVALID_CAPS"
+          },
+          "403": {
+            "description": "NOT_AUTHORIZED"
+          },
+          "404": {
+            "description": "AGENT_NOT_FOUND"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/envelopes/revoke": {
+      "post": {
+        "summary": "Deactivate an agent's envelope on a chain (OWNER/ADMIN)",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok"
+          },
+          "403": {
+            "description": "NOT_AUTHORIZED"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/proposals": {
+      "post": {
+        "summary": "Run the five checks on an OperationRecord",
+        "description": "201 ALLOW, 202 ESCALATE, 200 DENY. A refusal is an answer, not an error. The agent is taken from the token, never from the body.",
+        "security": [
+          {
+            "agentToken": [
+              "wallet:propose"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OperationRecord"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "DENY"
+          },
+          "201": {
+            "description": "ALLOW"
+          },
+          "202": {
+            "description": "ESCALATE"
+          },
+          "401": {
+            "description": "not an agent with wallet:propose for this org"
+          },
+          "429": {
+            "description": "rate limited"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/authorizations": {
+      "get": {
+        "summary": "Audit surface",
+        "description": "A member sees every authorization without signatures. An agent with wallet:read sees only its own, with signatures — this is how an escalated proposal's authorization reaches it after approval. Also returns the plane's public key.",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "agentToken": [
+              "wallet:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "authorizations + publicKey"
+          },
+          "403": {
+            "description": "neither a member nor a wallet:read agent"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/authorizations/{authorizationId}/settle": {
+      "post": {
+        "summary": "The signer reports what the chain did",
+        "security": [
+          {
+            "agentToken": [
+              "wallet:settle"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "outcome",
+                  "txHash"
+                ],
+                "properties": {
+                  "outcome": {
+                    "enum": [
+                      "CONFIRMED",
+                      "REVERTED"
+                    ]
+                  },
+                  "txHash": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "{ status: SPENT, anomaly }"
+          },
+          "400": {
+            "description": "SETTLEMENT_INVALID"
+          },
+          "404": {
+            "description": "AUTHORIZATION_NOT_FOUND"
+          },
+          "409": {
+            "description": "SETTLEMENT_CONFLICT"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/authorizations/{authorizationId}/revoke": {
+      "post": {
+        "summary": "Revoke an issued, unspent authorization (OWNER/ADMIN)",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok"
+          },
+          "403": {
+            "description": "not OWNER/ADMIN"
+          },
+          "409": {
+            "description": "AUTHORIZATION_NOT_REVOCABLE"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/ledger": {
+      "get": {
+        "summary": "Today's reserved / committed / remaining per active envelope",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ledger lines"
+          },
+          "403": {
+            "description": "not a member"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/addresses": {
+      "get": {
+        "summary": "Receiving addresses this org has registered",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "addresses"
+          }
+        }
+      },
+      "post": {
+        "summary": "Register a receiving address (OWNER/ADMIN)",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "address"
+          },
+          "400": {
+            "description": "ADDRESS_INVALID"
+          },
+          "403": {
+            "description": "NOT_AUTHORIZED"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/settlements": {
+      "get": {
+        "summary": "Settlements this org paid or received (?side=payer|payee)",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "settlements"
+          }
+        }
+      },
+      "post": {
+        "summary": "Pay a partner org for a claimed broadcast, or pay its invoice",
+        "description": "Either `invoiceId` alone (chain, asset, amount and payee come from the payee's invoice) or the five explicit fields. The payee's address is resolved from the payee's own registry and never accepted from the body. 201 ALLOW, 202 ESCALATE, 200 DENY; a refusal is recorded as a settlement too. When a settlement policy covers an escalated payment it is answered on the record as the human who set the policy and the result reads ALLOW with `autoAcceptedByPolicyId`.",
+        "security": [
+          {
+            "agentToken": [
+              "wallet:propose"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "required": [
+                      "invoiceId"
+                    ],
+                    "properties": {
+                      "invoiceId": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "workBroadcastId",
+                      "payeeOrgId",
+                      "chain",
+                      "asset",
+                      "amount"
+                    ],
+                    "properties": {
+                      "workBroadcastId": {
+                        "type": "string"
+                      },
+                      "payeeOrgId": {
+                        "type": "string"
+                      },
+                      "chain": {
+                        "type": "string"
+                      },
+                      "asset": {
+                        "type": "string"
+                      },
+                      "amount": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "DENY"
+          },
+          "201": {
+            "description": "ALLOW"
+          },
+          "202": {
+            "description": "ESCALATE"
+          },
+          "400": {
+            "description": "BROADCAST_NOT_CLAIMED · SELF_SETTLEMENT"
+          },
+          "403": {
+            "description": "NOT_PAYER · NO_ACTIVE_PARTNERSHIP"
+          },
+          "404": {
+            "description": "BROADCAST_NOT_FOUND · INVOICE_NOT_FOUND"
+          },
+          "409": {
+            "description": "PAYEE_HAS_NO_ADDRESS · INVOICE_NOT_PAYABLE"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/envelopes/delegate": {
+      "get": {
+        "summary": "The delegations this agent has made",
+        "security": [
+          {
+            "agentToken": [
+              "wallet:delegate"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "delegations"
+          },
+          "401": {
+            "description": "not a wallet:delegate agent for this org"
+          }
+        }
+      },
+      "post": {
+        "summary": "Carve a sub-envelope for another agent out of this agent's delegable envelope",
+        "description": "The only agent path that creates an envelope, and it can only narrow: kinds, assets and destinations must be subsets of the delegator's; every cap at most the delegator's; escalation at least as strict; the children's daily caps together fit inside the delegator's, whose own spendable daily is reduced by the same amount. The target must not hold a human-set envelope on that chain. Every delegation is a recorded LOW decision. Superseding or revoking the parent revokes the children.",
+        "security": [
+          {
+            "agentToken": [
+              "wallet:delegate"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/SpendEnvelopeInput"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "agentName"
+                    ],
+                    "properties": {
+                      "agentName": {
+                        "type": "string",
+                        "description": "the agent to delegate to"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "delegation (an envelope with decisionId)"
+          },
+          "400": {
+            "description": "ENVELOPE_INVALID · ENVELOPE_INVALID_CAPS · SELF_DELEGATION · DELEGATION_EXCEEDS_PARENT"
+          },
+          "401": {
+            "description": "not a wallet:delegate agent"
+          },
+          "403": {
+            "description": "DELEGATION_NOT_PERMITTED"
+          },
+          "404": {
+            "description": "AGENT_NOT_FOUND"
+          },
+          "409": {
+            "description": "TARGET_HAS_ENVELOPE"
+          },
+          "429": {
+            "description": "rate limited"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/envelopes/delegate/revoke": {
+      "post": {
+        "summary": "Take back a delegation this agent made (cascades onward)",
+        "security": [
+          {
+            "agentToken": [
+              "wallet:delegate"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "agentName",
+                  "chain"
+                ],
+                "properties": {
+                  "agentName": {
+                    "type": "string"
+                  },
+                  "chain": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ok"
+          },
+          "404": {
+            "description": "DELEGATION_NOT_FOUND"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/invoices": {
+      "get": {
+        "summary": "Invoices this org issued or owes (?side=payee|payer)",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "agentToken": [
+              "wallet:propose"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "invoices"
+          },
+          "403": {
+            "description": "neither a member nor a wallet:propose agent"
+          }
+        }
+      },
+      "post": {
+        "summary": "Raise an invoice against a broadcast this org delivered on",
+        "description": "The payee is the org in the path; the payer is whoever posted the broadcast and is never named in the body. Both memories record it.",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "agentToken": [
+              "wallet:propose"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "workBroadcastId",
+                  "chain",
+                  "asset",
+                  "amount"
+                ],
+                "properties": {
+                  "workBroadcastId": {
+                    "type": "string"
+                  },
+                  "chain": {
+                    "type": "string"
+                  },
+                  "asset": {
+                    "type": "string"
+                  },
+                  "amount": {
+                    "type": "string"
+                  },
+                  "memo": {
+                    "type": "string",
+                    "maxLength": 500
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "invoice"
+          },
+          "400": {
+            "description": "INVOICE_INVALID · SELF_INVOICE · BROADCAST_NOT_CLAIMED"
+          },
+          "403": {
+            "description": "NO_ACTIVE_PARTNERSHIP"
+          },
+          "404": {
+            "description": "BROADCAST_NOT_FOUND"
+          },
+          "429": {
+            "description": "rate limited"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/invoices/{invoiceId}/void": {
+      "post": {
+        "summary": "Void an unpaid invoice this org issued",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "agentToken": [
+              "wallet:propose"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "invoice"
+          },
+          "404": {
+            "description": "INVOICE_NOT_FOUND"
+          },
+          "409": {
+            "description": "INVOICE_NOT_VOIDABLE"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/settlement-policies": {
+      "get": {
+        "summary": "Active settlement auto-accept policies",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "policies"
+          },
+          "403": {
+            "description": "not a member"
+          }
+        }
+      },
+      "post": {
+        "summary": "Settlements to a partner, on one chain and asset, up to a ceiling, need no fresh approval (OWNER/ADMIN)",
+        "description": "The plane still runs every check and the envelope still refuses first; the policy answers only the escalation, on the record, as the human who set it.",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "partnerOrgId",
+                  "chain",
+                  "asset",
+                  "maxAmount"
+                ],
+                "properties": {
+                  "partnerOrgId": {
+                    "type": "string"
+                  },
+                  "chain": {
+                    "type": "string"
+                  },
+                  "asset": {
+                    "type": "string"
+                  },
+                  "maxAmount": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "policy"
+          },
+          "400": {
+            "description": "POLICY_INVALID"
+          },
+          "403": {
+            "description": "NOT_AUTHORIZED"
+          },
+          "404": {
+            "description": "PARTNER_NOT_FOUND"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/settlement-policies/revoke": {
+      "post": {
+        "summary": "Revoke a settlement policy (OWNER/ADMIN)",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "id"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ok"
+          },
+          "403": {
+            "description": "NOT_AUTHORIZED"
+          },
+          "404": {
+            "description": "POLICY_NOT_FOUND"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/receivables": {
+      "get": {
+        "summary": "The payee's view: outstanding invoices, expected, received (with receipts), refused, reverted, totals per chain/asset and per payer",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "agentToken": [
+              "wallet:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "receivables"
+          },
+          "403": {
+            "description": "neither a member nor a wallet:read agent"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/receipts/{settlementId}": {
+      "get": {
+        "summary": "The receipt page for a settled payment, in this org's vault, with its claim address",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "agentToken": [
+              "wallet:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "receipt"
+          },
+          "403": {
+            "description": "NOT_A_PARTY"
+          },
+          "404": {
+            "description": "SETTLEMENT_NOT_FOUND · RECEIPT_NOT_READY"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/metrics": {
+      "get": {
+        "summary": "Human asks per hundred writes, reason coverage, settlement latency, over ?days (default 7, max 90)",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "agentToken": [
+              "wallet:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{ days, metrics }"
+          },
+          "403": {
+            "description": "neither a member nor a wallet:read agent"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/identities": {
+      "get": {
+        "summary": "Which derived account acts for which agent (Phase 17)",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "agentToken": [
+              "wallet:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "identities",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "identities": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AgentChainIdentity"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "not a member or wallet:read agent"
+          }
+        }
+      },
+      "post": {
+        "summary": "Assign an agent its account index on a family; idempotent",
+        "description": "OWNER/ADMIN. The index is the identity and is never reused; index 0 is the treasury. The address is reported later by the signer (POST ./address).",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "agentName",
+                  "family"
+                ],
+                "properties": {
+                  "agentName": {
+                    "type": "string"
+                  },
+                  "family": {
+                    "enum": [
+                      "evm",
+                      "tron"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "identity"
+          },
+          "400": {
+            "description": "FAMILY_UNSUPPORTED"
+          },
+          "401": {
+            "description": "no session"
+          },
+          "403": {
+            "description": "NOT_AUTHORIZED"
+          },
+          "404": {
+            "description": "AGENT_NOT_FOUND"
+          },
+          "409": {
+            "description": "IDENTITY_CONTENDED"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/identities/address": {
+      "post": {
+        "summary": "The signer reports the address an index derives to",
+        "description": "wallet:settle — the party holding the seed. An index derives one address, ever: a different address for a recorded index is ADDRESS_CONFLICT.",
+        "security": [
+          {
+            "agentToken": [
+              "wallet:settle"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "agentName",
+                  "family",
+                  "address"
+                ],
+                "properties": {
+                  "agentName": {
+                    "type": "string"
+                  },
+                  "family": {
+                    "enum": [
+                      "evm",
+                      "tron"
+                    ]
+                  },
+                  "address": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "identity"
+          },
+          "400": {
+            "description": "ADDRESS_INVALID"
+          },
+          "401": {
+            "description": "not a wallet:settle agent"
+          },
+          "404": {
+            "description": "IDENTITY_NOT_FOUND"
+          },
+          "409": {
+            "description": "ADDRESS_CONFLICT"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/identities/plan": {
+      "get": {
+        "summary": "The envelope tree as Safe Allowance Module transactions (Phase 17)",
+        "description": "Members. A document, not an action: one addDelegate + setAllowance per agent with an envelope for the token on the chain, at its effective daily max. Agents without a recorded address are listed under missingAddress.",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "safe",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "module",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "chain",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "evm:<chainId>"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "plan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SafeAllowancePlan"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "missing parameters · FAMILY_UNSUPPORTED"
+          },
+          "403": {
+            "description": "not a member"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/meters": {
+      "post": {
+        "summary": "Open a meter: a cap for one provider under one decision (Phase 19)",
+        "description": "201 ALLOW (open), 202 ESCALATE (pending a human), 200 DENY. Graded like a spend of the cap: kind `meter` must be on the envelope, the provider on the allowlist, the cap under perTxMax and today's budget.",
+        "security": [
+          {
+            "agentToken": [
+              "wallet:propose"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "chain",
+                  "asset",
+                  "provider",
+                  "unit",
+                  "cap"
+                ],
+                "properties": {
+                  "chain": {
+                    "type": "string"
+                  },
+                  "asset": {
+                    "type": "string"
+                  },
+                  "provider": {
+                    "type": "string"
+                  },
+                  "providerName": {
+                    "type": "string"
+                  },
+                  "unit": {
+                    "type": "string"
+                  },
+                  "cap": {
+                    "type": "string"
+                  },
+                  "toleranceBps": {
+                    "type": "integer",
+                    "default": 100
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "DENY"
+          },
+          "201": {
+            "description": "ALLOW"
+          },
+          "202": {
+            "description": "ESCALATE"
+          },
+          "400": {
+            "description": "missing fields"
+          },
+          "401": {
+            "description": "not a wallet:propose agent"
+          },
+          "429": {
+            "description": "rate limited"
+          }
+        }
+      },
+      "get": {
+        "summary": "The org's meters",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "agentToken": [
+              "wallet:read"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "agentName",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "meters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "meters": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Meter"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "not a member or wallet:read agent"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/meters/{meterId}": {
+      "get": {
+        "summary": "One meter with its counts",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "agentToken": [
+              "wallet:read"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "meterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "meter"
+          },
+          "403": {
+            "description": "not a member or wallet:read agent"
+          },
+          "404": {
+            "description": "METER_NOT_FOUND"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/meters/{meterId}/tick": {
+      "post": {
+        "summary": "Record units and their cost against the cap; no decision",
+        "security": [
+          {
+            "agentToken": [
+              "wallet:propose"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "meterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "units",
+                  "amount"
+                ],
+                "properties": {
+                  "units": {
+                    "type": "string"
+                  },
+                  "amount": {
+                    "type": "string"
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "meter"
+          },
+          "400": {
+            "description": "INVALID_AMOUNT"
+          },
+          "401": {
+            "description": "not a wallet:propose agent"
+          },
+          "403": {
+            "description": "NOT_METER_AGENT"
+          },
+          "404": {
+            "description": "METER_NOT_FOUND"
+          },
+          "409": {
+            "description": "METER_NOT_OPEN · METER_CAP"
+          },
+          "429": {
+            "description": "rate limited"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/meters/{meterId}/close": {
+      "post": {
+        "summary": "Reconcile the provider's count against the agent's and settle",
+        "description": "201 with the transfer authorization for what was used (bounded by the cap and the agent's count plus tolerance) when the counts agree within toleranceBps; 200 with METER_DISAGREE or METER_EMPTY otherwise, the cap released and the difference recorded.",
+        "security": [
+          {
+            "agentToken": [
+              "wallet:propose"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "meterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "providerUnits",
+                  "providerAmount"
+                ],
+                "properties": {
+                  "providerUnits": {
+                    "type": "string"
+                  },
+                  "providerAmount": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "refused: METER_DISAGREE · METER_EMPTY"
+          },
+          "201": {
+            "description": "closed, with authorization"
+          },
+          "400": {
+            "description": "INVALID_AMOUNT"
+          },
+          "401": {
+            "description": "not a wallet:propose agent"
+          },
+          "403": {
+            "description": "NOT_METER_AGENT"
+          },
+          "404": {
+            "description": "METER_NOT_FOUND"
+          },
+          "409": {
+            "description": "METER_NOT_OPEN"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/external/invoices": {
+      "post": {
+        "summary": "Pay a SignedInvoice from a payee outside FlashyOS (Phase 18)",
+        "description": "The plane verifies the invoice (shape, signature under payee.publicKey, window) and then grades the transfer like any spend: the destination must be on the agent's allowlist. 201 ALLOW, 202 ESCALATE, 200 DENY (recorded as REFUSED). One settlement per (org, invoice id).",
+        "security": [
+          {
+            "agentToken": [
+              "wallet:propose"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "invoice"
+                ],
+                "properties": {
+                  "invoice": {
+                    "$ref": "#/components/schemas/SignedInvoice"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "DENY"
+          },
+          "201": {
+            "description": "ALLOW"
+          },
+          "202": {
+            "description": "ESCALATE"
+          },
+          "400": {
+            "description": "INVOICE_INVALID · INVOICE_BAD_SIGNATURE · INVOICE_MALFORMED"
+          },
+          "401": {
+            "description": "not a wallet:propose agent"
+          },
+          "409": {
+            "description": "INVOICE_EXPIRED · INVOICE_NOT_YET_VALID · INVOICE_ALREADY_SETTLED"
+          },
+          "429": {
+            "description": "rate limited"
+          }
+        }
+      },
+      "get": {
+        "summary": "What this org has paid or refused outside FlashyOS",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "agentToken": [
+              "wallet:read"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "agentName",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "settlements",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "settlements": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ExternalSettlement"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "not a member or wallet:read agent"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/external/invoices/{invoiceId}/receipt": {
+      "get": {
+        "summary": "The plane-signed receipt for an invoice this org paid",
+        "description": "Hand it to the payee; they verify it with the plane's public key (GET ../../public-key) and the invoice they sent — offline, with `verifyReceipt` from @flashyos/wallet-wdk.",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "agentToken": [
+              "wallet:read"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "invoiceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "receipt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "receipt": {
+                      "$ref": "#/components/schemas/SignedReceipt"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "not a member or wallet:read agent"
+          },
+          "404": {
+            "description": "RECEIPT_NOT_READY"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/public-key": {
+      "get": {
+        "summary": "The plane's Ed25519 authorization public key",
+        "description": "Public, no credential. Every SpendAuthorization and every SignedReceipt verifies under it. One key per plane; the org in the path is a courtesy.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "algorithm",
+                    "format",
+                    "publicKey"
+                  ],
+                  "properties": {
+                    "algorithm": {
+                      "const": "Ed25519"
+                    },
+                    "format": {
+                      "const": "spki-pem"
+                    },
+                    "publicKey": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/provenance": {
+      "get": {
+        "summary": "The export: every wallet fact, hash-chained (Phase 20)",
+        "description": "JSON by default; ?format=jsonl for one entry per line. Verify offline with `verifyExport` from @flashyos/wallet-wdk, the latest seal and the plane's public key.",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "agentToken": [
+              "wallet:read"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "json",
+                "jsonl"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "entries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "entries": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ProvenanceEntry"
+                      }
+                    }
+                  }
+                }
+              },
+              "application/x-ndjson": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "not a member or wallet:read agent"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/provenance/seal": {
+      "post": {
+        "summary": "Seal the export: a signed Merkle root with the next sequence number",
+        "description": "OWNER/ADMIN. Nothing is sent anywhere; the response carries the calldata a person may anchor.",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "seal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "seal": {
+                      "$ref": "#/components/schemas/Seal"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "no session"
+          },
+          "403": {
+            "description": "NOT_AUTHORIZED"
+          },
+          "409": {
+            "description": "EXPORT_EMPTY"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/provenance/seals": {
+      "get": {
+        "summary": "Every seal, newest first",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "agentToken": [
+              "wallet:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "seals",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "seals": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Seal"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "not a member or wallet:read agent"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/sharing": {
+      "get": {
+        "summary": "Whether this org's weekly wallet numbers count in the public network summary (Phase 21)",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{ share }"
+          },
+          "403": {
+            "description": "not a member"
+          }
+        }
+      },
+      "post": {
+        "summary": "Count this org's numbers publicly, or stop",
+        "description": "OWNER only. Sums only ever leave; no per-org figure is public. The public summary is GET /api/v1/public/network/wallet.",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "share"
+                ],
+                "properties": {
+                  "share": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "{ share }"
+          },
+          "400": {
+            "description": "share must be boolean"
+          },
+          "401": {
+            "description": "no session"
+          },
+          "403": {
+            "description": "NOT_AUTHORIZED"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/trusted-planes": {
+      "get": {
+        "summary": "The planes this org trusts receipts from (Phase 23)",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "agentToken": [
+              "wallet:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "trustedPlanes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "trustedPlanes": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/TrustedPlane"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "not a member or wallet:read agent"
+          }
+        }
+      },
+      "post": {
+        "summary": "Trust a plane's key, or every active key of its plane document",
+        "description": "OWNER only. { name, publicKey, url? } trusts one key; { name, document, url? } trusts a plane document's active keys, each checked against its own fingerprint. A revoked key trusted again is reactivated.",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "publicKey": {
+                    "type": "string"
+                  },
+                  "document": {
+                    "type": "object"
+                  },
+                  "url": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "trustedPlanes"
+          },
+          "400": {
+            "description": "TRUST_INVALID · PLANE_DOCUMENT_MALFORMED · PLANE_DOCUMENT_BAD_KID"
+          },
+          "401": {
+            "description": "no session"
+          },
+          "403": {
+            "description": "NOT_AUTHORIZED"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/trusted-planes/{trustedPlaneId}/revoke": {
+      "post": {
+        "summary": "Stop trusting a plane's key",
+        "description": "OWNER only. Receipts already accepted stay accepted; new ones under the key are refused.",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "trustedPlaneId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "revoked"
+          },
+          "401": {
+            "description": "no session"
+          },
+          "403": {
+            "description": "NOT_AUTHORIZED"
+          },
+          "404": {
+            "description": "TRUSTED_PLANE_NOT_FOUND"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/signing-keys": {
+      "get": {
+        "summary": "The org's own signing keys, public halves, active first (Phase 24)",
+        "description": "Created on first read if none exists. What a payer checks an invoice's payee.publicKey against.",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "agentToken": [
+              "wallet:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "keys",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "keys": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/OrgSigningKey"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "not a member or wallet:read agent"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/signing-keys/rotate": {
+      "post": {
+        "summary": "A new active signing key; the old one retired and kept",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "key"
+          },
+          "401": {
+            "description": "no session"
+          },
+          "403": {
+            "description": "NOT_AUTHORIZED"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/outbound-invoices": {
+      "post": {
+        "summary": "Issue a SignedInvoice under the org's key to a payer anywhere (Phase 24)",
+        "description": "A wallet:propose agent or a member session. The destination is one of the org's registered receiving addresses on the chain — chosen, never typed.",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "agentToken": [
+              "wallet:propose"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "chain",
+                  "asset",
+                  "amount"
+                ],
+                "properties": {
+                  "chain": {
+                    "type": "string"
+                  },
+                  "asset": {
+                    "type": "string"
+                  },
+                  "amount": {
+                    "type": "string"
+                  },
+                  "destination": {
+                    "type": "string"
+                  },
+                  "memo": {
+                    "type": "string"
+                  },
+                  "expiresInDays": {
+                    "type": "integer",
+                    "default": 30
+                  },
+                  "invoiceId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "invoice",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "invoice": {
+                      "$ref": "#/components/schemas/OutboundInvoice"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "INVOICE_INVALID · DESTINATION_NOT_OURS"
+          },
+          "401": {
+            "description": "no credential"
+          },
+          "409": {
+            "description": "NO_RECEIVING_ADDRESS · INVOICE_ID_TAKEN"
+          },
+          "429": {
+            "description": "rate limited"
+          }
+        }
+      },
+      "get": {
+        "summary": "Invoices this org issued",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "agentToken": [
+              "wallet:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "invoices"
+          },
+          "403": {
+            "description": "not a member or wallet:read agent"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/outbound-invoices/{outboundInvoiceId}/void": {
+      "post": {
+        "summary": "Void an unpaid outbound invoice",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "agentToken": [
+              "wallet:propose"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "outboundInvoiceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "invoice"
+          },
+          "401": {
+            "description": "no credential"
+          },
+          "404": {
+            "description": "INVOICE_NOT_FOUND"
+          },
+          "409": {
+            "description": "INVOICE_PAID"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/receivables/receipts": {
+      "post": {
+        "summary": "Present a SignedReceipt for an invoice this org issued (Phase 24)",
+        "description": "Any agent or member of the org may present one; the receipt is trusted for what it verifies as. It must verify under a key in the org's trusted-plane registry or one of this plane's own, name the invoice by hash, and match it in asset, destination and amount. Accepted: the invoice is PAID, a receipt page is written, the brain hears about it. Refused: a capture with the reason, nothing filed.",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "agentToken": [
+              "wallet:propose"
+            ]
+          },
+          {
+            "agentToken": [
+              "wallet:read"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "receipt"
+                ],
+                "properties": {
+                  "receipt": {
+                    "$ref": "#/components/schemas/SignedReceipt"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "accepted, with the invoice and which trusted key it verified under"
+          },
+          "400": {
+            "description": "RECEIPT_INVALID · RECEIPT_BAD_SIGNATURE · RECEIPT_MALFORMED · RECEIPT_MISMATCH"
+          },
+          "401": {
+            "description": "no credential"
+          },
+          "403": {
+            "description": "RECEIPT_WRONG_KEY — signed by a plane this org does not trust"
+          },
+          "404": {
+            "description": "RECEIPT_UNKNOWN_INVOICE"
+          },
+          "409": {
+            "description": "INVOICE_VOID · RECEIPT_REVERTED"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/x402/challenge": {
+      "get": {
+        "summary": "The 402 body for one of this org's paid resources (Phase 25)",
+        "description": "payTo is a registered receiving address, the network a listed testnet. Members and wallet:read agents.",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "agentToken": [
+              "wallet:read"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "chain",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "asset",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "amount",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "resource",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "payTo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "description",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "challenge",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/X402Challenge"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "X402_INVALID · X402_MAINNET_NOT_ENABLED · X402_UNKNOWN_NETWORK · DESTINATION_NOT_OURS"
+          },
+          "403": {
+            "description": "not a member or wallet:read agent"
+          },
+          "409": {
+            "description": "NO_RECEIVING_ADDRESS"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/x402/settlements": {
+      "post": {
+        "summary": "A facilitator reports that an x402 payment to this org settled",
+        "description": "wallet:settle only — the reporting scope, never the asking one. The payment (the buyer's X-PAYMENT header or its payload) must pay one of the org's receiving addresses on a listed testnet; one record per nonce.",
+        "security": [
+          {
+            "agentToken": [
+              "wallet:settle"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "payment",
+                  "asset",
+                  "txHash",
+                  "outcome"
+                ],
+                "properties": {
+                  "payment": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object"
+                      }
+                    ]
+                  },
+                  "asset": {
+                    "type": "string"
+                  },
+                  "txHash": {
+                    "type": "string"
+                  },
+                  "outcome": {
+                    "enum": [
+                      "CONFIRMED",
+                      "REVERTED"
+                    ]
+                  },
+                  "resource": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "payment",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "payment": {
+                      "$ref": "#/components/schemas/InboundPayment"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "X402_INVALID · X402_MALFORMED · X402_NOT_OURS · X402_MAINNET_NOT_ENABLED"
+          },
+          "401": {
+            "description": "not a wallet:settle agent"
+          },
+          "409": {
+            "description": "X402_CONFLICT"
+          }
+        }
+      },
+      "get": {
+        "summary": "x402 payments that arrived",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "agentToken": [
+              "wallet:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "payments"
+          },
+          "403": {
+            "description": "not a member or wallet:read agent"
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{orgId}/wallet/digest": {
+      "get": {
+        "summary": "The money page as the next compile will write it (Phase 26)",
+        "description": "Paid, received, external, invoiced, x402, metered and refused in the window, with the claim address of every receipt page, and the latest seal. ?days=7 (1–90). Null when the org has no wallet history.",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "agentToken": [
+              "wallet:read"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 7
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{ page: IncomingPage | null }"
+          },
+          "403": {
+            "description": "not a member or wallet:read agent"
+          }
+        }
+      }
+    }
+  }
+}

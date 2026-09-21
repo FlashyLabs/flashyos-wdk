@@ -1,0 +1,54 @@
+{
+  "name": "@flashyos/wdk",
+  "version": "0.1.0",
+  "description": "The FlashyOS agent object: identity, authority, wallet, memory and partners behind one interface. Create an agent, give it an identity, provision financial capabilities on Tether WDK, set its permissions, let it transact, record what it did, coordinate it with other agents \u2014 through one object, one event system, any chain WDK reaches.",
+  "keywords": [
+    "flashyos",
+    "wdk",
+    "tether",
+    "agent",
+    "wallet",
+    "autonomous-organization"
+  ],
+  "license": "Apache-2.0",
+  "author": "Flashy Labs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FlashyLabs/flashyos",
+    "directory": "packages/wdk"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "examples",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts src/cli.ts --format esm,cjs --dts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@flashyos/wallet-wdk": "0.1.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^2.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "bin": {
+    "flashyos-run": "./dist/cli.js"
+  }
+}

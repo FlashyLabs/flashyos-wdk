@@ -1,0 +1,78 @@
+{
+  "version": 3,
+  "families": [
+    {
+      "family": "evm",
+      "methods": [
+        "sendTransaction",
+        "transfer",
+        "swap",
+        "bridge"
+      ],
+      "callShapes": [
+        "{ to, value }  native transfer",
+        "{ to: <token>, data: a9059cbb… }  ERC-20 transfer(address,uint256)",
+        "{ to: <AllowanceModule>, data: 4515641a… }  Safe Allowance Module executeAllowanceTransfer — an ERC-20 transfer through an on-chain limit; refused when it also pays the executor"
+      ],
+      "kinds": [
+        "transfer",
+        "swap",
+        "bridge"
+      ],
+      "addressRule": "0x + 40 hex, compared case-insensitively",
+      "notRecognised": [
+        "approve",
+        "transferFrom",
+        "permit / signTypedData",
+        "delegate (ERC-7702)",
+        "arbitrary calldata",
+        "multicall",
+        "a token transfer that also carries native value"
+      ]
+    },
+    {
+      "family": "tron",
+      "methods": [
+        "sendTransaction",
+        "transfer"
+      ],
+      "callShapes": [
+        "{ to, value }  TRX transfer",
+        "{ token, recipient, amount }  TRC-20 transfer"
+      ],
+      "kinds": [
+        "transfer"
+      ],
+      "addressRule": "base58check, T + 33 chars, compared exactly (case-sensitive)",
+      "notRecognised": [
+        "triggerSmartContract payloads",
+        "energy / bandwidth delegation",
+        "freeze / stake",
+        "multi-sig"
+      ]
+    }
+  ],
+  "protocols": [
+    {
+      "protocol": "swap",
+      "kind": "swap",
+      "optionsShape": "{ tokenIn, tokenOut, tokenInAmount, to?, minAmountOut? }  (@tetherto/wdk-wallet SwapSellOptions)",
+      "refuses": [
+        "buy side: tokenOutAmount without tokenInAmount (unbounded spend)",
+        "a tokenIn or tokenOut that is not an address or \"native\"",
+        "a `to` that is not an address"
+      ]
+    },
+    {
+      "protocol": "bridge",
+      "kind": "bridge",
+      "optionsShape": "{ targetChain, recipient, token, amount }  (@tetherto/wdk-wallet BridgeOptions)",
+      "refuses": [
+        "a targetChain equal to the source chain",
+        "a targetChain family with no address rule",
+        "a recipient invalid on the target chain"
+      ]
+    }
+  ],
+  "bridgeDestinationFormat": "<targetChain>:<recipient>, e.g. evm:42161:0x… or tron:mainnet:T…; the authorization and the envelope allowlist bind both"
+}

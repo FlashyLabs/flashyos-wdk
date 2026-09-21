@@ -1,0 +1,17 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Node 22: two packages in Tether WDK's optional subtree declare
+      # engines.node ^22.21 || >=24.9, and npm drops an optional subtree whose
+      # engine check fails, silently.
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: 'npm' }
+      - run: npm ci
+      - name: The optional Tether WDK subtree installed
+        run: test -f node_modules/@tetherto/wdk/package.json
+      - run: npm run typecheck
+      - run: npm test

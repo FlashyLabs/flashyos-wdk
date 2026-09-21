@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://flashyos.com/schema/wallet/spend-envelope-input.json",
+  "title": "SpendEnvelopeInput",
+  "description": "What one agent may do on one chain. Only an OWNER or ADMIN may create or supersede one.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "chain",
+    "kinds",
+    "assets",
+    "destinations",
+    "perTxMax",
+    "dailyMax",
+    "autoApproveMax"
+  ],
+  "properties": {
+    "chain": {
+      "type": "string",
+      "pattern": "^(evm|tron|ton|solana|btc):[A-Za-z0-9_-]+$"
+    },
+    "kinds": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "transfer",
+          "swap",
+          "bridge",
+          "meter"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "destinations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true,
+      "description": "Exact addresses. Empty means no external destination is permitted."
+    },
+    "perTxMax": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "dailyMax": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "autoApproveMax": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$",
+      "description": "At or below: impact LOW, auto-approved."
+    },
+    "alwaysEscalate": {
+      "type": "boolean",
+      "default": false
+    },
+    "escalationImpact": {
+      "enum": [
+        "MEDIUM",
+        "HIGH",
+        "CRITICAL"
+      ],
+      "default": "MEDIUM"
+    },
+    "delegable": {
+      "type": "boolean",
+      "default": false,
+      "description": "May the agent carve sub-envelopes for other agents out of this one? Never wider than this envelope on any axis; children's daily caps partition this one's."
+    }
+  }
+}

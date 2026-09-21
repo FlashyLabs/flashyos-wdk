@@ -1,0 +1,54 @@
+{
+  "name": "@flashyos/signer",
+  "version": "0.1.0",
+  "description": "The isolated signer for the FlashyOS wallet authorization plane: verifies an Ed25519-signed SpendAuthorization, re-derives the operation from the real call, refuses on any mismatch, executes through Tether WDK, and reports settlement. Holds the seed; never holds the plane's private key.",
+  "keywords": [
+    "flashyos",
+    "wdk",
+    "tether",
+    "signer",
+    "wallet"
+  ],
+  "license": "Apache-2.0",
+  "author": "Flashy Labs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FlashyLabs/flashyos",
+    "directory": "packages/signer"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@flashyos/wallet-wdk": "0.1.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^2.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "optionalDependencies": {
+    "@tetherto/wdk": "^1.0.0-beta.18",
+    "@tetherto/wdk-wallet-evm": "^1.0.0-beta.19",
+    "@tetherto/wdk-wallet-evm-erc-4337": "^1.0.0-beta.20",
+    "@tetherto/wdk-wallet-tron": "^1.0.0-beta.13"
+  }
+}

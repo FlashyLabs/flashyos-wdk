@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://flashyos.com/schema/wallet/signed-invoice.json",
+  "title": "SignedInvoice",
+  "description": "An invoice from a payee that need not be a FlashyOS org, signed with the Ed25519 key it carries. The paying agent's envelope decides whether it is paid; the signature proves who asked. Canonical form for the signature: the signed fields only, keys sorted, no whitespace, `sig` omitted.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "id",
+    "payee",
+    "chain",
+    "asset",
+    "amount",
+    "destination",
+    "memo",
+    "issuedAt",
+    "expiresAt",
+    "sig"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "description": "The payee's own id. One settlement per (payer org, id)."
+    },
+    "payee": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "publicKey"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "publicKey": {
+          "type": "string",
+          "pattern": "^-----BEGIN PUBLIC KEY-----[\\s\\S]+-----END PUBLIC KEY-----\\s*$",
+          "description": "Ed25519 public key, SPKI PEM. The invoice verifies under this key."
+        }
+      }
+    },
+    "chain": {
+      "type": "string",
+      "pattern": "^(evm|tron|ton|solana|btc):[A-Za-z0-9_-]+$"
+    },
+    "asset": {
+      "type": "string",
+      "minLength": 1
+    },
+    "amount": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "destination": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The payee's receiving address on `chain`. Must be on the paying agent's allowlist."
+    },
+    "memo": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "issuedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expiresAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sig": {
+      "type": "string",
+      "minLength": 1,
+      "description": "base64url(ed25519(canonical payload)) under payee.publicKey"
+    }
+  }
+}

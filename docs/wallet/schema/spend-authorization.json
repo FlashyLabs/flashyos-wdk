@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://flashyos.com/schema/wallet/spend-authorization.json",
+  "title": "SpendAuthorization",
+  "description": "A single-use, short-lived, Ed25519-signed capability naming exactly what may happen. The signer refuses any call that does not match it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "orgId",
+    "agentName",
+    "chain",
+    "kind",
+    "asset",
+    "maxAmount",
+    "destination",
+    "reservationId",
+    "decisionId",
+    "issuedAt",
+    "expiresAt",
+    "sig"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The nonce. Single use."
+    },
+    "orgId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "agentName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "chain": {
+      "type": "string",
+      "pattern": "^(evm|tron|ton|solana|btc):[A-Za-z0-9_-]+$"
+    },
+    "kind": {
+      "enum": [
+        "transfer",
+        "swap",
+        "bridge",
+        "meter"
+      ]
+    },
+    "asset": {
+      "type": "string",
+      "minLength": 1
+    },
+    "maxAmount": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$",
+      "description": "Inclusive ceiling."
+    },
+    "destination": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "reservationId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "decisionId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "issuedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expiresAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sig": {
+      "type": "string",
+      "minLength": 1,
+      "description": "base64url(ed25519(canonical payload without sig))"
+    }
+  }
+}

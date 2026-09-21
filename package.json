@@ -1,0 +1,14 @@
+{
+  "name": "flashyos-wdk",
+  "private": true,
+  "description": "Governed economic agency for autonomous agent organizations on Tether WDK: the extractor packs, the remote-authorization policy, the isolated signer, the agent object, and the documents. The public mirror of packages/{wallet-wdk,signer,wdk} and docs/wallet from FlashyOS.",
+  "license": "Apache-2.0",
+  "repository": { "type": "git", "url": "https://github.com/FlashyLabs/flashyos-wdk" },
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "typecheck": "npm run typecheck --workspaces",
+    "test": "npm run test --workspaces",
+    "build": "npm run build --workspaces"
+  },
+  "engines": { "node": ">=22" }
+}

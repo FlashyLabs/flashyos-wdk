@@ -1,0 +1,15 @@
+{
+  "id": "auth_fixture_0001",
+  "orgId": "org_fixture",
+  "agentName": "research-ops",
+  "chain": "evm:8453",
+  "kind": "transfer",
+  "asset": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+  "maxAmount": "25000000",
+  "destination": "0x7f3c000000000000000000000000000000000001",
+  "reservationId": "rsv_fixture_0001",
+  "decisionId": "dec_fixture_0001",
+  "issuedAt": "2026-09-19T11:00:00.000Z",
+  "expiresAt": "2099-01-01T00:00:00.000Z",
+  "sig": "3CMGlo5hmdKAkMdlB3tFXhhlb8Lj02AjazvB6zo0rWmF_RmYvLV6i4ufFlzk4LP3mjZnsHAgMzj5BY5bP1tQCw"
+}

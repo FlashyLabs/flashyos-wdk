@@ -1,0 +1,120 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://flashyos.com/schema/wallet/signed-receipt.json",
+  "title": "SignedReceipt",
+  "description": "The plane's signed statement that an invoice was settled, under the same Ed25519 key that signs every SpendAuthorization. Verifiable offline with the plane's public key; names the invoice by the sha256 of its canonical bytes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "invoiceId",
+    "invoiceHash",
+    "payer",
+    "payee",
+    "chain",
+    "asset",
+    "amount",
+    "destination",
+    "txHash",
+    "outcome",
+    "authorizationId",
+    "settledAt",
+    "sig"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "invoiceId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "invoiceHash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "payer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "org",
+        "agentName",
+        "publicKey"
+      ],
+      "properties": {
+        "org": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The paying org's slug."
+        },
+        "agentName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "publicKey": {
+          "type": "string",
+          "pattern": "^-----BEGIN PUBLIC KEY-----[\\s\\S]+-----END PUBLIC KEY-----\\s*$",
+          "description": "The plane's authorization public key. A verifier compares it to the key it already trusts."
+        }
+      }
+    },
+    "payee": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "publicKey"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "publicKey": {
+          "type": "string",
+          "pattern": "^-----BEGIN PUBLIC KEY-----[\\s\\S]+-----END PUBLIC KEY-----\\s*$"
+        }
+      }
+    },
+    "chain": {
+      "type": "string",
+      "pattern": "^(evm|tron|ton|solana|btc):[A-Za-z0-9_-]+$"
+    },
+    "asset": {
+      "type": "string",
+      "minLength": 1
+    },
+    "amount": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$",
+      "description": "What the plane authorized and the chain settled."
+    },
+    "destination": {
+      "type": "string",
+      "minLength": 1
+    },
+    "txHash": {
+      "type": "string",
+      "minLength": 1
+    },
+    "outcome": {
+      "enum": [
+        "CONFIRMED",
+        "REVERTED"
+      ]
+    },
+    "authorizationId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "settledAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sig": {
+      "type": "string",
+      "minLength": 1,
+      "description": "base64url(ed25519(canonical payload)) under payer.publicKey"
+    }
+  }
+}

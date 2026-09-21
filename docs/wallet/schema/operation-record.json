@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://flashyos.com/schema/wallet/operation-record.json",
+  "title": "OperationRecord",
+  "description": "A chain-agnostic description of an economic action. Mirrors the shape in tetherto/wdk PR #88 so a proposed record and an evaluated record are the same record.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "chain",
+    "asset",
+    "amount",
+    "destination"
+  ],
+  "properties": {
+    "kind": {
+      "enum": [
+        "transfer",
+        "swap",
+        "bridge",
+        "meter"
+      ]
+    },
+    "chain": {
+      "type": "string",
+      "pattern": "^(evm|tron|ton|solana|btc):[A-Za-z0-9_-]+$",
+      "description": "<family>:<chainId>, e.g. evm:8453"
+    },
+    "asset": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Exact contract address, or \"native\"."
+    },
+    "amount": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$",
+      "description": "Non-negative integer in base units."
+    },
+    "destination": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "description": "Exact address. null only for an internal swap. For a bridge: `<targetChain>:<recipient>` (e.g. evm:42161:0x… or tron:mainnet:T…), binding both the chain and the recipient."
+    },
+    "raw": {
+      "type": "object",
+      "description": "The originating call. Opaque to the plane; never used for a decision."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "swap"
+          }
+        }
+      },
+      "then": {},
+      "else": {
+        "properties": {
+          "destination": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "bridge"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "destination": {
+            "type": "string",
+            "pattern": "^(evm|tron|ton|solana|btc):[A-Za-z0-9_-]+:.+$"
+          }
+        }
+      }
+    }
+  ]
+}
