@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: ⚡ Found the Strike preimage?
+    url: https://github.com/FlashyLabs/flashyos-wdk/issues/new?title=%E2%9A%A1%20STRIKE
+    about: Open an issue titled "⚡ STRIKE" with the recovered sentence — see the README.
+  - name: WDK findings offered upstream
+    url: https://github.com/FlashyLabs/flashyos-wdk/blob/main/docs/wallet/upstream/README.md
+    about: Read what we'd contribute to tetherto/wdk before filing a WDK-itself issue here.
