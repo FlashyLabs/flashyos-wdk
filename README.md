@@ -17,7 +17,7 @@ three packages and the documents, extracted unchanged from the monorepo.
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
 [![node](https://img.shields.io/badge/node-%3E%3D22-brightgreen.svg)](https://nodejs.org)
 
-Built by [Flashy Labs](https://flashyos.com). Two smaller, standalone packages sit in front of a wallet like this one — [`@flashy/wdk-policy-guard`](https://github.com/FlashyLabs/wdk-policy-guard) and [`@flashy/wdk-staking-kit`](https://github.com/FlashyLabs/wdk-staking-kit) — if you want the spending-policy or staking piece without the rest of the plane.
+Built by [Flashy Labs](https://flashyos.com). Two smaller, standalone packages sit in front of a wallet like this one — [`@flashylabs/wdk-policy-guard`](https://github.com/FlashyLabs/wdk-policy-guard) and [`@flashylabs/wdk-staking-kit`](https://github.com/FlashyLabs/wdk-staking-kit) — if you want the spending-policy or staking piece without the rest of the plane.
 
 ## What's here
 
