@@ -2,7 +2,12 @@ name: CI
 on: [push, pull_request]
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # fail-fast off so a platform-specific failure reports as exactly that.
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # Node 22: two packages in Tether WDK's optional subtree declare
@@ -12,6 +17,11 @@ jobs:
         with: { node-version: '22', cache: 'npm' }
       - run: npm ci
       - name: The optional Tether WDK subtree installed
+        # bash explicitly: GitHub runs `run:` with PowerShell on Windows, where
+        # `test -f` is not a command. The check is about npm silently dropping
+        # an optional subtree whose engine check failed — it has to run on every
+        # platform, because that is exactly where the drop would differ.
+        shell: bash
         run: test -f node_modules/@tetherto/wdk/package.json
       - run: npm run typecheck
       - run: npm test

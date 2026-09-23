@@ -1,0 +1,8 @@
+# Line endings are LF in the repository and LF in every checkout, so a
+# Windows runner's git does not hand the tests a file the repository never
+# committed.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.gz  binary

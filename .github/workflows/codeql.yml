@@ -7,6 +7,13 @@ on:
   schedule:
     - cron: '0 6 * * 1' # weekly, Monday
 
+# One analysis per ref at a time: concurrent pull_request runs restored an
+# overlay-base database written by a different codeql-action version and failed
+# on the mismatch — a cache collision, not a finding.
+concurrency:
+  group: codeql-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   security-events: write

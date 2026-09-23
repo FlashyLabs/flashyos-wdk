@@ -7,7 +7,7 @@
   "workspaces": ["packages/*"],
   "scripts": {
     "typecheck": "npm run typecheck --workspaces",
-    "test": "npm run test --workspaces && node --test test/*.test.mjs",
+    "test": "npm run test --workspaces && node --test test/strike.test.mjs test/test-script.test.mjs test/workflow-pins.test.mjs",
     "build": "npm run build --workspaces"
   },
   "engines": { "node": ">=22" }
