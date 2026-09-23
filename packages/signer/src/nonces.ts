@@ -4,7 +4,7 @@
 // safe direction. The plane's own SPENT status is the second copy of this
 // fact; this store is the one the signer consults without a network hop.
 
-import { appendFileSync, closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync } from 'fs';
+import { closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, writeSync } from 'fs';
 import { dirname } from 'path';
 
 export interface NonceStore {
@@ -56,14 +56,34 @@ export class FileNonceStore implements NonceStore {
   async add(id: string): Promise<void> {
     if (id.includes('\n')) throw new Error('authorization id must not contain a newline');
     if (this.spent.has(id)) return;
-    // Durable before the caller continues to broadcast.
-    appendFileSync(this.path, `${id}\n`, 'utf8');
-    const fd = openSync(this.path, 'r');
+
+    // Durable before the caller continues to broadcast, through ONE descriptor.
+    //
+    // This appended with `appendFileSync` and then reopened the file `'r'` to
+    // fsync it. On Linux that works, because fsync flushes the file rather
+    // than the handle. On Windows it does not: FlushFileBuffers needs a handle
+    // with write access, so fsync on a read-only descriptor fails `EPERM`
+    // (errno -4048) — and `add` threw before recording the nonce.
+    //
+    // That is worse than a portability bug in a nonce store. A signer's replay
+    // protection is exactly the thing that must not fail open, and on Windows
+    // every `add` raised. Found 2026-09-23 by the first CI run that included a
+    // windows-latest cell, on code that had been green on ubuntu throughout.
+    //
+    // Writing and syncing through the same append handle is both portable and
+    // a stronger guarantee: the flush applies to the descriptor that did the
+    // write, rather than to whatever a second open happened to return.
+    const fd = openSync(this.path, 'a');
     try {
+      writeSync(fd, `${id}\n`, null, 'utf8');
       fsyncSync(fd);
     } finally {
       closeSync(fd);
     }
+
+    // Only after the bytes are durable. If the write throws, the id stays
+    // unspent in memory too — a store that marked it spent and failed to
+    // persist would allow the replay it exists to stop, one restart later.
     this.spent.add(id);
   }
 }
