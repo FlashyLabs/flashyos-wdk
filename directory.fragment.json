@@ -1,0 +1,80 @@
+{
+  "contract": "directory/1",
+  "generated": "2026-09-29",
+  "org": "org/flashyos-wdk",
+  "nodes": [
+    {
+      "id": "org/flashyos-wdk",
+      "kind": "org",
+      "name": "Flashyos Wdk"
+    },
+    {
+      "id": "person/michael",
+      "kind": "person",
+      "name": "Michael Gord"
+    },
+    {
+      "id": "agent/flashyos-wdk-maintainer",
+      "kind": "agent",
+      "name": "maintainer",
+      "for": "org/flashyos-wdk"
+    },
+    {
+      "id": "agent/flashyos-wdk-review",
+      "kind": "agent",
+      "name": "review",
+      "for": "org/flashyos-wdk"
+    },
+    {
+      "id": "agent/flashyos-wdk-release",
+      "kind": "agent",
+      "name": "release",
+      "for": "org/flashyos-wdk"
+    },
+    {
+      "id": "agent/flashyos-wdk-conformance",
+      "kind": "agent",
+      "name": "conformance",
+      "for": "org/flashyos-wdk"
+    },
+    {
+      "id": "agent/flashyos-wdk-adoption",
+      "kind": "agent",
+      "name": "adoption",
+      "for": "org/flashyos-wdk"
+    }
+  ],
+  "edges": [
+    {
+      "from": "org/flashyos-wdk",
+      "rel": "staffs",
+      "to": "agent/flashyos-wdk-maintainer",
+      "by": "person/michael"
+    },
+    {
+      "from": "org/flashyos-wdk",
+      "rel": "staffs",
+      "to": "agent/flashyos-wdk-review",
+      "by": "person/michael"
+    },
+    {
+      "from": "org/flashyos-wdk",
+      "rel": "staffs",
+      "to": "agent/flashyos-wdk-release",
+      "by": "person/michael"
+    },
+    {
+      "from": "org/flashyos-wdk",
+      "rel": "staffs",
+      "to": "agent/flashyos-wdk-conformance",
+      "by": "person/michael"
+    },
+    {
+      "from": "org/flashyos-wdk",
+      "rel": "staffs",
+      "to": "agent/flashyos-wdk-adoption",
+      "by": "person/michael"
+    }
+  ],
+  "x-note": "Five agents, one per charter role. Generated from flashyos.roles.json; a live org is provisioned from the charter with provision-org-from-charter."
+}
