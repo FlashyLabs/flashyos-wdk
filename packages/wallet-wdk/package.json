@@ -6,7 +6,7 @@
   "license": "Apache-2.0",
   "author": "Flashy Labs",
   "homepage": "https://flashyos.com",
-  "repository": { "type": "git", "url": "https://github.com/FlashyLabs/flashyos", "directory": "packages/wallet-wdk" },
+  "repository": { "type": "git", "url": "https://github.com/FlashyLabs/flashyos-wdk", "directory": "packages/wallet-wdk" },
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",

@@ -24,4 +24,5 @@ jobs:
         shell: bash
         run: test -f node_modules/@tetherto/wdk/package.json
       - run: npm run typecheck
+      - run: npm run lint
       - run: npm test

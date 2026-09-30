@@ -14,7 +14,7 @@
   "author": "Flashy Labs",
   "repository": {
     "type": "git",
-    "url": "https://github.com/FlashyLabs/flashyos",
+    "url": "https://github.com/FlashyLabs/flashyos-wdk",
     "directory": "packages/wdk"
   },
   "main": "./dist/index.js",

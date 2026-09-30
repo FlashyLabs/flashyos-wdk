@@ -13,7 +13,7 @@
   "author": "Flashy Labs",
   "repository": {
     "type": "git",
-    "url": "https://github.com/FlashyLabs/flashyos",
+    "url": "https://github.com/FlashyLabs/flashyos-wdk",
     "directory": "packages/signer"
   },
   "main": "./dist/index.js",
