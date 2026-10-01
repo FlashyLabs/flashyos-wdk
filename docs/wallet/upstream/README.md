@@ -66,9 +66,24 @@ backend reports this honestly as `TYPED_DATA_UNSUPPORTED`; we would propose
 can) and note that `signTypedData` *is* governed by the policy engine, which
 is right — our second line admits it only for the in-flight record.
 
+**The bridge protocol module names no testnet chain** (found building Flashy
+Bridge, 2026-09-21). `@tetherto/wdk-protocol-bridge-usdt0-evm` beta.10 moves
+USDT0 and XAUt0 across EVM chains through LayerZero's USDT0 standard, and
+every chain its `config.js` names is a mainnet chain — no Sepolia, no
+Arbitrum Sepolia, nothing. Every other WDK wallet module we checked (EVM,
+TRON, BTC) ships a testnet entry; the bridge module is the one exception. Our
+own bridge router (`BridgeRouter.execute()`, in the reference routing layer
+we are open-sourcing separately) refuses to execute against any route on this
+module, unconditionally, for exactly this reason — a wrapper around a bridge
+that offers no testnet has nothing safe to test against, and we would rather
+ship a routing layer that refuses correctly than one that quietly risks real
+value to prove itself works. We would propose a `testnet` (or per-chain
+`network`) field in the module's route/chain config, mirroring how the
+wallet modules already distinguish mainnet and testnet chains.
+
 ## 3. What we would ask for
 
-Not a partnership. Two things an engineer can answer in an afternoon:
+Not a partnership. Three things an engineer can answer in an afternoon:
 
 1. A review of the remote-authorization pattern — is `abstain`-on-unreachable
    the intended use, and is an `OperationRecord` extractor pack the intended
@@ -76,6 +91,9 @@ Not a partnership. Two things an engineer can answer in an afternoon:
 2. A view on where it should live: upstream under `tetherto/wdk` as a
    reference policy, or as an ecosystem module under our own name with a
    pointer from the WDK showcase.
+3. Whether a testnet chain is planned for
+   `wdk-protocol-bridge-usdt0-evm`, and if a config-shape proposal from us
+   (§2, above) would be useful ahead of that.
 
 ## 4. What we would not claim
 
