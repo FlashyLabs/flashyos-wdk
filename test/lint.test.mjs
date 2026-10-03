@@ -26,7 +26,10 @@ test('CI runs the lint', () => {
 })
 
 test('the linter finds the repo modules and the whole tree passes today', () => {
-  const files = collectModules()
+  // Normalise to forward slashes: collectModules builds paths with path.join,
+  // which uses "\" on Windows, so an endsWith('tools/lint.mjs') check is false
+  // there even though the file is present — the real windows-latest CI break.
+  const files = collectModules().map((f) => f.replace(/\\/g, '/'))
   assert.ok(files.length >= 5, `expected the linter to find several .mjs modules, found ${files.length}`)
   assert.ok(files.some((f) => f.endsWith('tools/lint.mjs')), 'the linter does not include itself')
   assert.ok(files.some((f) => f.endsWith('.test.mjs')), 'the linter does not include the root test files')
