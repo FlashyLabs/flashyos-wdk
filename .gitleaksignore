@@ -1,0 +1,13 @@
+# Reviewed false positives — public signatures, not credentials.
+# A throwaway Ed25519 test key, the public USDT-TRC20 contract address, a public
+# USDC Base-Sepolia testnet address used as test fixtures, a base36 alphabet
+# constant, and two hits in gitignored dist/ build output.
+docs/wallet/fixtures/test-signing-key.pem:private-key:1
+packages/signer/src/chain.protocols.test.ts:generic-api-key:141
+packages/signer/src/chain.protocols.test.ts:generic-api-key:142
+packages/signer/src/onchain/safeAllowancePlan.test.ts:generic-api-key:9
+packages/signer/src/tronChain.test.ts:generic-api-key:97
+packages/wallet-wdk/src/policy.test.ts:generic-api-key:54
+packages/wdk/src/agent.test.ts:generic-api-key:210
+packages/signer/dist/chunk-WH52K7UU.mjs:generic-api-key:9153
+packages/signer/dist/index.js:generic-api-key:51402
