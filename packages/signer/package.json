@@ -27,7 +27,9 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "INVARIANTS.md",
+    "vendor-invariants.mjs"
   ],
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts",
