@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mkdtempSync, readFileSync, mkdirSync } from 'fs';
+import { mkdtempSync, readFileSync, mkdirSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { FileNonceStore, MemoryNonceStore } from './nonces';
@@ -56,6 +56,27 @@ describe('FileNonceStore', () => {
     await store.add('x');
     expect(readFileSync(path, 'utf8')).toBe('x\n');
     expect(new FileNonceStore(path).size).toBe(1);
+  });
+
+  it('terminates a torn tail before appending: the fragment stays its own line and the new id survives the next restart', async () => {
+    // A crash between write and fsync leaves a fragment with no newline. The
+    // store loads it as an (inert) spent id; what it must not do is append
+    // the next id straight after it — `auth_tor` + `auth_torn\n` read back as
+    // one id, `auth_torauth_torn`, and a spend that had returned true was
+    // unspent two restarts later. Found 2026-10-10 by src/recovery.test.ts.
+    const path = join(dir(), 'nonces.txt');
+    writeFileSync(path, 'auth_tor');
+
+    const reopened = new FileNonceStore(path);
+    expect(reopened.size).toBe(1);
+    expect(await reopened.has('auth_tor')).toBe(true);
+    expect(await reopened.spend('auth_torn')).toBe(true);
+    expect(readFileSync(path, 'utf8')).toBe('auth_tor\nauth_torn\n');
+
+    const again = new FileNonceStore(path);
+    expect(await again.has('auth_torn')).toBe(true);
+    expect(await again.spend('auth_torn')).toBe(false);
+    expect(again.size).toBe(2);
   });
 
   it('refuses an id that would corrupt the file', async () => {

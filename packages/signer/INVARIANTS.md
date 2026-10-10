@@ -189,3 +189,59 @@ mutation
 shows the harness refusing the other order. `src/nonces.test.ts`
 › *does not mark a nonce spent when the write fails* and
 › *survives a restart — the property MemoryNonceStore lacks*.
+
+## I-6 · Stranded, never doubled
+
+**Claim.** An authorization the signer has spent stays spent across a process
+death and restart, whatever the dying process managed to do with it. A new
+`Signer` over the same `FileNonceStore` file refuses every id the file holds
+as `REPLAY` and broadcasts nothing for it: an authorization whose process was
+killed between spend and broadcast is stranded — never executed on chain — and
+not executed twice; `k` authorizations executed before a restart are `k`
+replays refused after it, with zero new broadcasts, while a fresh one executes
+exactly once. A crash mid-append leaves a fragment with no newline; the store
+loads it as an inert spent id (it can only be a prefix of an id whose spend
+never returned, so refusing it strands at worst), the real id executes exactly
+once, and a spend appended after the fragment is still held spent on the next
+restart. Across any sequence of executions and restarts over one file, the
+number of broadcasts per authorization id never exceeds one.
+
+**Why.** I-1 through I-5 are proved inside one process; a signer that holds a
+seed will be killed, redeployed and restarted, and the plane's reservation
+covers one execution regardless of how many processes it took. The order
+"spent before broadcast" (I-4) only pays off if the spend is what the next
+process reads. The recovery suite also found a real hole while proving this:
+until 2026-10-10 the store appended straight after a torn fragment, so
+`auth_tor` + `auth_torn\n` read back as one id, `auth_torauth_torn`, and a spend
+that had returned `true` — fsync'd, broadcast — was unspent two restarts later,
+and its replay executed.
+
+**Enforced by.** `FileNonceStore` in `src/nonces.ts`: the constructor reloads
+every non-empty trimmed line as spent and notes a file that ends mid-line;
+`add` terminates such a torn tail in the same write as the new id, so the
+fragment stays its own line and the id is read back as itself; `spend` returns
+only after the `fsync`, and `Signer.execute()` / `Signer.signTypedData()` in
+`src/signer.ts` ask the backend only after `spend` has returned `true`. A
+backend that never answers therefore finds the id already durable and leaves
+`pendingExecutions` empty — that array is filled by the `catch`, and a hang
+throws nothing; the record that survives the kill is the line in the file.
+
+**Proved by.** `src/recovery.test.ts`
+› *killed between spend and broadcast: the next process over the same nonce file refuses the authorization as REPLAY, with zero broadcasts — stranded, never doubled*
+— a backend that hangs forever, the call left in flight, the file read back,
+and a second signer over it refusing with the recording backend untouched;
+› *after k executions and a restart, every one of the k replays is REPLAY with zero new broadcasts, and a fresh authorization executes exactly once*;
+› *a torn tail: the fragment loads as an inert spent id and the real id, whose spend never returned, executes exactly once*;
+› *regression: a spend appended after a torn tail is still spent on the next restart — the fragment and the id never merge into one line*
+and
+› *a fragment that happens to spell another real id strands that authorization, and never doubles any*,
+the direction a torn write may err in. The property
+› *under random execute and restart sequences over one nonce file: broadcasts per authorization never exceed one across every process, and the current process holds every broadcast id spent*
+replaces the signer mid-sequence with a new one over the same file and counts
+broadcasts across every process, with a guard that restarts and refused
+replays actually occurred. The mutation
+› *mutation: a nonce store that records spends in memory only is refused by the harness at the restart that forgot the spend, and the replay after it executes*
+shows the harness refusing a store that never writes, shrinking to the
+execute-then-restart that is the defect, and the next execute doubling the
+authorization. `src/nonces.test.ts`
+› *terminates a torn tail before appending: the fragment stays its own line and the new id survives the next restart*.

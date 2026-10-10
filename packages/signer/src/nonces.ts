@@ -50,14 +50,26 @@ export class MemoryNonceStore implements NonceStore {
  */
 export class FileNonceStore implements NonceStore {
   private readonly spent = new Set<string>();
+  /**
+   * The file ends mid-line: a crash between `write` and `fsync` left a
+   * fragment with no newline. The fragment is loaded as a spent id of its own
+   * (it can only be a prefix of an id whose spend never returned, so refusing
+   * it strands at worst), and the next append must start a fresh line — until
+   * 2026-10-10 it did not, so `auth_tor` + `auth_torn\n` read back after the
+   * next restart as ONE id, `auth_torauth_torn`, and a spend that had returned
+   * true, fsync'd and broadcast, was unspent two restarts later.
+   */
+  private tornTail = false;
 
   constructor(private readonly path: string) {
     mkdirSync(dirname(path), { recursive: true });
     if (existsSync(path)) {
-      for (const line of readFileSync(path, 'utf8').split('\n')) {
+      const content = readFileSync(path, 'utf8');
+      for (const line of content.split('\n')) {
         const id = line.trim();
         if (id) this.spent.add(id);
       }
+      this.tornTail = content.length > 0 && !content.endsWith('\n');
     }
   }
 
@@ -89,9 +101,12 @@ export class FileNonceStore implements NonceStore {
     // Writing and syncing through the same append handle is both portable and
     // a stronger guarantee: the flush applies to the descriptor that did the
     // write, rather than to whatever a second open happened to return.
+    //
+    // A torn tail is terminated in the same write, so the fragment stays its
+    // own line and this id is read back as itself.
     const fd = openSync(this.path, 'a');
     try {
-      writeSync(fd, `${id}\n`, null, 'utf8');
+      writeSync(fd, `${this.tornTail ? '\n' : ''}${id}\n`, null, 'utf8');
       fsyncSync(fd);
     } finally {
       closeSync(fd);
@@ -100,6 +115,7 @@ export class FileNonceStore implements NonceStore {
     // Only after the bytes are durable. If the write throws, the id stays
     // unspent in memory too — a store that marked it spent and failed to
     // persist would allow the replay it exists to stop, one restart later.
+    this.tornTail = false;
     this.spent.add(id);
   }
   /**
