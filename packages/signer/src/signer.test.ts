@@ -156,3 +156,49 @@ describe('Signer.execute', () => {
     await expect(signer.execute({ authorization: first, call })).resolves.toMatchObject({ ok: false, code: 'REPLAY' });
   });
 });
+
+describe('at-most-once under concurrency', () => {
+  // External audit, 2026-10-10: two concurrent requests carrying ONE signed
+  // authorization both executed against the mock backend, in source and in
+  // the npm release. `has` then `add` were two steps with awaits between them.
+  it('two concurrent executes with one authorization: exactly one executes, the other is REPLAY', async () => {
+    const chain = new MockChain();
+    const signer = new Signer({ planePublicKeyPem, chains: [chain], now: NOW });
+    const authorization = issue();
+    const call = { to: USDT, data: transferData(VENDOR, 25_000_000n) };
+    const results = await Promise.all([signer.execute({ authorization, call }), signer.execute({ authorization, call })]);
+    const ok = results.filter((r) => r.ok);
+    const replay = results.filter((r) => !r.ok && r.code === 'REPLAY');
+    expect(ok).toHaveLength(1);
+    expect(replay).toHaveLength(1);
+    expect(chain.executions).toHaveLength(1);
+  });
+
+  it('twenty concurrent executes with one authorization still execute once', async () => {
+    const chain = new MockChain();
+    const signer = new Signer({ planePublicKeyPem, chains: [chain], now: NOW });
+    const authorization = issue();
+    const call = { to: USDT, data: transferData(VENDOR, 1n) };
+    const results = await Promise.all(Array.from({ length: 20 }, () => signer.execute({ authorization, call })));
+    expect(results.filter((r) => r.ok)).toHaveLength(1);
+    expect(chain.executions).toHaveLength(1);
+  });
+
+  it('a nonce store whose has() is slow still admits exactly one', async () => {
+    // A store that answers `has` only after a tick is what a networked or
+    // file-backed store looks like; the guarantee must not depend on timing.
+    const spent = new Set<string>();
+    const slow = {
+      has: async (id: string) => { await new Promise((r) => setTimeout(r, 5)); return spent.has(id); },
+      add: async (id: string) => { spent.add(id); },
+      spend: async (id: string) => { if (spent.has(id)) return false; spent.add(id); return true; },
+    };
+    const chain = new MockChain();
+    const signer = new Signer({ planePublicKeyPem, chains: [chain], nonces: slow, now: NOW });
+    const authorization = issue();
+    const call = { to: USDT, data: transferData(VENDOR, 1n) };
+    const results = await Promise.all([signer.execute({ authorization, call }), signer.execute({ authorization, call }), signer.execute({ authorization, call })]);
+    expect(results.filter((r) => r.ok)).toHaveLength(1);
+    expect(chain.executions).toHaveLength(1);
+  });
+});

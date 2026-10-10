@@ -144,8 +144,13 @@ export class Signer {
 
     // Spent before broadcast: a crash between the two strands an unused
     // authorization, which is recoverable; the reverse strands a double
-    // spend, which is not.
-    await this.nonces.add(authorization.id);
+    // spend, which is not. Consumed through `spend`, which checks and records
+    // in one step: the `has` above is a fast refusal, not the guarantee. Two
+    // requests carrying one authorization that interleaved between `has` and
+    // `add` both executed (reproduced 2026-10-10); exactly one may win here.
+    if (!(await this.nonces.spend(authorization.id))) {
+      return { ok: false, code: 'REPLAY', reason: `authorization ${authorization.id} has already been used` };
+    }
 
     let result;
     try {
@@ -204,7 +209,9 @@ export class Signer {
       if (!verdict.ok) return { ok: false, code: 'ONCHAIN_LIMIT', reason: verdict.reason };
     }
 
-    await this.nonces.add(authorization.id);
+    if (!(await this.nonces.spend(authorization.id))) {
+      return { ok: false, code: 'REPLAY', reason: `authorization ${authorization.id} has already been used` };
+    }
     let signed;
     try {
       const accountIndex = this.options.accountIndexFor ? await this.options.accountIndexFor(authorization) : undefined;

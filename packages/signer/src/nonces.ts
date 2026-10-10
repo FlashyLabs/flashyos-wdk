@@ -10,6 +10,15 @@ import { dirname } from 'path';
 export interface NonceStore {
   has(id: string): Promise<boolean>;
   add(id: string): Promise<void>;
+  /**
+   * Mark `id` spent and say whether THIS call did it: true the first time,
+   * false if it was already spent. `has` then `add` is two steps, and two
+   * requests carrying one authorization that interleave between them both
+   * pass — reproduced against the mock backend 2026-10-10, and in the npm
+   * release. At-most-once needs the check and the record to be one step, which
+   * is what `spend` is; the signer consumes an authorization through it.
+   */
+  spend(id: string): Promise<boolean>;
 }
 
 export class MemoryNonceStore implements NonceStore {
@@ -19,6 +28,13 @@ export class MemoryNonceStore implements NonceStore {
   }
   async add(id: string): Promise<void> {
     this.spent.add(id);
+  }
+  // Synchronous check-and-set on the Set: no await between the two, so no
+  // other caller can slip in. The async signature is the interface's.
+  async spend(id: string): Promise<boolean> {
+    if (this.spent.has(id)) return false;
+    this.spent.add(id);
+    return true;
   }
 }
 
@@ -86,4 +102,16 @@ export class FileNonceStore implements NonceStore {
     // persist would allow the replay it exists to stop, one restart later.
     this.spent.add(id);
   }
+  /**
+   * Check-and-set in one synchronous step on the in-memory set — the file
+   * append below it is what makes the spend survive a restart. Nothing awaits
+   * between the check and the record, so two concurrent spends of one id
+   * cannot both see it unspent.
+   */
+  async spend(id: string): Promise<boolean> {
+    if (this.spent.has(id)) return false;
+    await this.add(id);
+    return true;
+  }
+
 }

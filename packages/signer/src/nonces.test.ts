@@ -64,3 +64,13 @@ describe('FileNonceStore', () => {
     expect(await store.has('a')).toBe(false);
   });
 });
+
+describe('spend — check and record in one step', () => {
+  it('MemoryNonceStore: the first spend wins, every later one loses, has() agrees', async () => {
+    const store = new MemoryNonceStore();
+    const results = await Promise.all([store.spend('a'), store.spend('a'), store.spend('a')]);
+    expect(results.filter(Boolean)).toHaveLength(1);
+    expect(await store.has('a')).toBe(true);
+    expect(await store.spend('b')).toBe(true);
+  });
+});
