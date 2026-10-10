@@ -45,7 +45,10 @@ describe('the hash chain', () => {
     const sealed = { ...payload, sig: sign(null, canonicalRoot(payload), privateKey).toString('base64url') };
     expect(verifyExport(entries, { root: sealed, publicKey: pub })).toMatchObject({ ok: true });
     expect(verifyExport(entries, { root: { ...sealed, root: 'ff'.repeat(32) }, publicKey: pub })).toMatchObject({ ok: false, code: 'ROOT_MISMATCH' });
-    expect(verifyExport(entries, { root: { ...sealed, sig: sealed.sig.replace(/^./, 'A') }, publicKey: pub })).toMatchObject({ ok: false, code: 'BAD_SIGNATURE' });
+    // Corrupt the first character with one it is not: writing 'A' over an 'A'
+    // left the signature intact one run in sixty-four, and that run went red.
+    const tampered = sealed.sig.replace(/^./, (c) => (c === 'A' ? 'B' : 'A'));
+    expect(verifyExport(entries, { root: { ...sealed, sig: tampered }, publicKey: pub })).toMatchObject({ ok: false, code: 'BAD_SIGNATURE' });
     expect(verifyExport(entries, { root: sealed })).toMatchObject({ ok: false, code: 'BAD_SIGNATURE' });
     const other = generateKeyPairSync('ed25519').publicKey.export({ type: 'spki', format: 'pem' }).toString();
     expect(verifyExport(entries, { root: sealed, publicKey: other })).toMatchObject({ ok: false, code: 'BAD_SIGNATURE' });
